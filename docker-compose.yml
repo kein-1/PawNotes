@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+
+  client:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # uses anonynomous binding to the node_modules; so 
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    
+    volumes: # bind mount root directory to docker directory for live reload with air
+      - ./backend:/app
+
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
