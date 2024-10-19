@@ -2,7 +2,7 @@ package main
 
 import (
 	"backend/db"
-	"backend/service/note"
+	"backend/service/pet"
 	"backend/service/user"
 	"log"
 	"net/http"
@@ -17,16 +17,24 @@ func setUpServer(db *pgxpool.Pool) (*chi.Mux, error) {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
-	// create user store, inject db into it, then inject user store into handler
-	userStore := user.NewUserStore(db)
-	userHandler := user.NewUserHandler(userStore)
+	// create user repo(interface), inject db into it
+	// create new service(interface), create handler (controller)
+	// inject it into handler
+
+	userRepo := user.NewUserRepo(db)
+	userService := user.NewUserServiceStruct(userRepo)
+	userHandler := user.NewUserHandler(userService)
 	userHandler.RegisterRoutes(router)
 
 	// create note service; inject db into it, then inject notestore into note handler
-	noteStore := note.NewNoteStore(db)
-	noteHandler := note.NewNoteHandler(noteStore)
-	noteHandler.RegisterRoutes(router)
+	// noteStore := note.NewNoteStore(db)
+	// noteHandler := note.NewNoteHandler(noteStore)
+	// noteHandler.RegisterRoutes(router)
 
+	petRepo := pet.NewPetRepo(db)
+	petService := pet.NewPetService(petRepo)
+	petHandler := pet.NewPetHandler(petService)
+	petHandler.RegisterRoutes(router)
 	return router, nil
 }
 
