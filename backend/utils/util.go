@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 )
@@ -55,27 +56,41 @@ func WriteValidationError(w http.ResponseWriter, status int, err validator.Valid
 	}
 
 	finalMap := make(map[string]map[string]string)
-	finalMap["message"] = errorMap
+	finalMap["errors"] = errorMap
 	fmt.Println("Map", errorMap)
 	SendJSON(w, status, finalMap)
 }
 
 func WriteError(w http.ResponseWriter, status int, err error) {
-	errorMsg := make(map[string]string)
-	errorMsg["message"] = err.Error() // calling .Error returns a string
+	errorMsg := map[string]string{
+		"error": err.Error(),
+	}
 	SendJSON(w, status, errorMsg)
 }
 
 func GenerateJWT(user *types.User) (string, error) {
 	key := []byte(config.ConfigValues.SECRET_KEY)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"id":  user.ID,
-			"exp": time.Now().Add(time.Hour * 24).Unix(),
-		})
+
+	claims := jwt.MapClaims{}
+	claims["user_id"] = user.ID
+	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*24))
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenStr, err := token.SignedString(key)
 	if err != nil {
 		return "", err
 	}
 	return tokenStr, err
+}
+
+func ExtractIDFromJWT(r *http.Request) (int, error) {
+	_, claims, _ := jwtauth.FromContext(r.Context())
+
+	userID, ok := claims["user_id"]
+	userIDFloat, ok := userID.(float64)
+	if !ok {
+		return -1, fmt.Errorf("Failed to cast")
+	}
+	userIDInt := int(userIDFloat)
+	return userIDInt, nil
 }

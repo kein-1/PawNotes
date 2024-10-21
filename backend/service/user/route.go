@@ -62,6 +62,7 @@ func (h *UserHandler) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 		Name:     "jwt",
 		Value:    jwt,
 		MaxAge:   3600 * 24,
+		Path:     "/api/",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
