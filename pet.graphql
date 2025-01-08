@@ -1,0 +1,11 @@
+
+extend type Mutation {
+    createPet(input: CreatePetInput!): Pet!
+    deletePet(id: ID!): Pet!
+    updatePet(id: ID!, input: UpdatePetInput!) : Pet!
+}
+
+extend type Query {
+    getPet(id: ID!): Pet!
+    getPets(userID: ID!): [Pet]!
+}

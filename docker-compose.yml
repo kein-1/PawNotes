@@ -1,0 +1,25 @@
+services:
+ 
+  backend:
+    build:
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - 8080:8080
+    volumes: # bind mount root directory to docker directory for live reload with air
+      - .:/app
+
+  db:
+    image: postgres:13
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - books_miniproj_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+
+volumes:
+  books_miniproj_data:
