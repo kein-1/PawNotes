@@ -18,7 +18,8 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("first"),
 		field.String("last"),
-		field.String("email"),
+		field.String("email").Unique(),
+		field.String("password"),
 	}
 }
 

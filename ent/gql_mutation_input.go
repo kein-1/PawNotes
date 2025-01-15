@@ -92,10 +92,11 @@ func (c *PetUpdateOne) SetInput(i UpdatePetInput) *PetUpdateOne {
 
 // CreateUserInput represents a mutation input for creating users.
 type CreateUserInput struct {
-	First  string
-	Last   string
-	Email  string
-	PetIDs []int
+	First    string
+	Last     string
+	Email    string
+	Password string
+	PetIDs   []int
 }
 
 // Mutate applies the CreateUserInput on the UserMutation builder.
@@ -103,6 +104,7 @@ func (i *CreateUserInput) Mutate(m *UserMutation) {
 	m.SetFirst(i.First)
 	m.SetLast(i.Last)
 	m.SetEmail(i.Email)
+	m.SetPassword(i.Password)
 	if v := i.PetIDs; len(v) > 0 {
 		m.AddPetIDs(v...)
 	}
@@ -119,6 +121,7 @@ type UpdateUserInput struct {
 	First        *string
 	Last         *string
 	Email        *string
+	Password     *string
 	ClearPets    bool
 	AddPetIDs    []int
 	RemovePetIDs []int
@@ -134,6 +137,9 @@ func (i *UpdateUserInput) Mutate(m *UserMutation) {
 	}
 	if v := i.Email; v != nil {
 		m.SetEmail(*v)
+	}
+	if v := i.Password; v != nil {
+		m.SetPassword(*v)
 	}
 	if i.ClearPets {
 		m.ClearPets()

@@ -17,9 +17,9 @@ services:
     env_file:
       - .env
     volumes:
-      - books_miniproj_data:/var/lib/postgresql/data
+      - pawnotes_db_data:/var/lib/postgresql/data
     restart: unless-stopped
 
 
 volumes:
-  books_miniproj_data:
+  pawnotes_db_data:

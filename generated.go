@@ -57,6 +57,10 @@ type ComplexityRoot struct {
 		UpdatePet  func(childComplexity int, id int, input ent.UpdatePetInput) int
 	}
 
+	Owner struct {
+		Name func(childComplexity int) int
+	}
+
 	PageInfo struct {
 		EndCursor       func(childComplexity int) int
 		HasNextPage     func(childComplexity int) int
@@ -76,20 +80,22 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetPet  func(childComplexity int, id int) int
-		GetPets func(childComplexity int, userID int) int
-		Node    func(childComplexity int, id int) int
-		Nodes   func(childComplexity int, ids []int) int
-		Pets    func(childComplexity int) int
-		Users   func(childComplexity int) int
+		GetOwner func(childComplexity int, id int) int
+		GetPet   func(childComplexity int, id int) int
+		GetPets  func(childComplexity int, userID int) int
+		Node     func(childComplexity int, id int) int
+		Nodes    func(childComplexity int, ids []int) int
+		Pets     func(childComplexity int) int
+		Users    func(childComplexity int) int
 	}
 
 	User struct {
-		Email func(childComplexity int) int
-		First func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Last  func(childComplexity int) int
-		Pets  func(childComplexity int) int
+		Email    func(childComplexity int) int
+		First    func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Last     func(childComplexity int) int
+		Password func(childComplexity int) int
+		Pets     func(childComplexity int) int
 	}
 }
 
@@ -106,6 +112,7 @@ type QueryResolver interface {
 	Pets(ctx context.Context) ([]*ent.Pet, error)
 	Users(ctx context.Context) ([]*ent.User, error)
 	GetPet(ctx context.Context, id int) (*ent.Pet, error)
+	GetOwner(ctx context.Context, id int) (*Owner, error)
 	GetPets(ctx context.Context, userID int) ([]*ent.Pet, error)
 }
 
@@ -187,6 +194,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UpdatePet(childComplexity, args["id"].(int), args["input"].(ent.UpdatePetInput)), true
+
+	case "Owner.name":
+		if e.complexity.Owner.Name == nil {
+			break
+		}
+
+		return e.complexity.Owner.Name(childComplexity), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -271,6 +285,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Pet.Weight(childComplexity), true
+
+	case "Query.getOwner":
+		if e.complexity.Query.GetOwner == nil {
+			break
+		}
+
+		args, err := ec.field_Query_getOwner_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetOwner(childComplexity, args["id"].(int)), true
 
 	case "Query.getPet":
 		if e.complexity.Query.GetPet == nil {
@@ -361,6 +387,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Last(childComplexity), true
+
+	case "User.password":
+		if e.complexity.User.Password == nil {
+			break
+		}
+
+		return e.complexity.User.Password(childComplexity), true
 
 	case "User.pets":
 		if e.complexity.User.Pets == nil {
@@ -687,6 +720,34 @@ func (ec *executionContext) field_Query___type_argsName(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_getOwner_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_getOwner_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_getOwner_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (int, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2int(ctx, tmp)
+	}
+
+	var zeroVal int
 	return zeroVal, nil
 }
 
@@ -1132,6 +1193,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_last(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
 			case "pets":
 				return ec.fieldContext_User_pets(ctx, field)
 			}
@@ -1199,6 +1262,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 				return ec.fieldContext_User_last(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
 			case "pets":
 				return ec.fieldContext_User_pets(ctx, field)
 			}
@@ -1215,6 +1280,50 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 	if fc.Args, err = ec.field_Mutation_deleteUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Owner_name(ctx context.Context, field graphql.CollectedField, obj *Owner) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Owner_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Owner_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Owner",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -1741,6 +1850,8 @@ func (ec *executionContext) fieldContext_Pet_owner(_ context.Context, field grap
 				return ec.fieldContext_User_last(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
 			case "pets":
 				return ec.fieldContext_User_pets(ctx, field)
 			}
@@ -1966,6 +2077,8 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 				return ec.fieldContext_User_last(ctx, field)
 			case "email":
 				return ec.fieldContext_User_email(ctx, field)
+			case "password":
+				return ec.fieldContext_User_password(ctx, field)
 			case "pets":
 				return ec.fieldContext_User_pets(ctx, field)
 			}
@@ -2042,6 +2155,65 @@ func (ec *executionContext) fieldContext_Query_getPet(ctx context.Context, field
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_getPet_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_getOwner(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_getOwner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetOwner(rctx, fc.Args["id"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*Owner)
+	fc.Result = res
+	return ec.marshalNOwner2ᚖgithubᚗcomᚋkeinᚑ1ᚋpawnotesᚐOwner(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_getOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "name":
+				return ec.fieldContext_Owner_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Owner", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_getOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2414,6 +2586,50 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 }
 
 func (ec *executionContext) fieldContext_User_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_password(ctx context.Context, field graphql.CollectedField, obj *ent.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_password(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Password, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_password(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -4334,7 +4550,7 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"first", "last", "email", "petIDs"}
+	fieldsInOrder := [...]string{"first", "last", "email", "password", "petIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4362,6 +4578,13 @@ func (ec *executionContext) unmarshalInputCreateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Email = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
 		case "petIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("petIDs"))
 			data, err := ec.unmarshalOID2ᚕintᚄ(ctx, v)
@@ -4458,7 +4681,7 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"first", "last", "email", "addPetIDs", "removePetIDs", "clearPets"}
+	fieldsInOrder := [...]string{"first", "last", "email", "password", "addPetIDs", "removePetIDs", "clearPets"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4486,6 +4709,13 @@ func (ec *executionContext) unmarshalInputUpdateUserInput(ctx context.Context, o
 				return it, err
 			}
 			it.Email = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
 		case "addPetIDs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addPetIDs"))
 			data, err := ec.unmarshalOID2ᚕintᚄ(ctx, v)
@@ -4591,6 +4821,45 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteUser(ctx, field)
 			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var ownerImplementors = []string{"Owner"}
+
+func (ec *executionContext) _Owner(ctx context.Context, sel ast.SelectionSet, obj *Owner) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, ownerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Owner")
+		case "name":
+			out.Values[i] = ec._Owner_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4893,6 +5162,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "getOwner":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getOwner(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "getPets":
 			field := field
 
@@ -4974,6 +5265,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "password":
+			out.Values[i] = ec._User_password(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -5497,6 +5793,20 @@ func (ec *executionContext) marshalNNode2ᚕgithubᚗcomᚋkeinᚑ1ᚋpawnotes�
 	wg.Wait()
 
 	return ret
+}
+
+func (ec *executionContext) marshalNOwner2githubᚗcomᚋkeinᚑ1ᚋpawnotesᚐOwner(ctx context.Context, sel ast.SelectionSet, v Owner) graphql.Marshaler {
+	return ec._Owner(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNOwner2ᚖgithubᚗcomᚋkeinᚑ1ᚋpawnotesᚐOwner(ctx context.Context, sel ast.SelectionSet, v *Owner) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Owner(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPet2githubᚗcomᚋkeinᚑ1ᚋpawnotesᚋentᚐPet(ctx context.Context, sel ast.SelectionSet, v ent.Pet) graphql.Marshaler {

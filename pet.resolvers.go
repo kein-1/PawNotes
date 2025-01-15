@@ -40,6 +40,11 @@ func (r *queryResolver) GetPet(ctx context.Context, id int) (*ent.Pet, error) {
 		pet.ID(id)).Only(ctx)
 }
 
+// GetOwner is the resolver for the getOwner field.
+func (r *queryResolver) GetOwner(ctx context.Context, id int) (*Owner, error) {
+	panic(fmt.Errorf("not implemented: GetOwner - getOwner"))
+}
+
 // GetPets is the resolver for the getPets field.
 func (r *queryResolver) GetPets(ctx context.Context, userID int) ([]*ent.Pet, error) {
 	return r.client.Pet.Query().All(ctx)

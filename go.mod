@@ -8,10 +8,12 @@ require (
 	github.com/99designs/gqlgen v0.17.62
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/cors v1.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/vektah/gqlparser/v2 v2.5.21
+	golang.org/x/crypto v0.31.0
 	golang.org/x/sync v0.10.0
 )
 
@@ -23,7 +25,6 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
@@ -39,7 +40,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20221230185412-738e83a70c30 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/text v0.21.0 // indirect

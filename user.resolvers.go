@@ -9,10 +9,23 @@ import (
 	"fmt"
 
 	"github.com/kein-1/pawnotes/ent"
+	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO : If i want to add the pets in this mutation, must reference : "Create edges with mutations on ent"
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error) {
+	// hash password
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to hash the password")
+	}
+
+	// add check for unique
+
+	input.Password = string(hashedPassword)
+
 	return r.client.User.Create().SetInput(input).Save(ctx)
 }
 

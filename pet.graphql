@@ -1,4 +1,9 @@
 
+
+type Owner{
+    name: String!
+}
+
 extend type Mutation {
     createPet(input: CreatePetInput!): Pet!
     deletePet(id: ID!): Pet!
@@ -7,5 +12,7 @@ extend type Mutation {
 
 extend type Query {
     getPet(id: ID!): Pet!
+    getOwner(id: ID!): Owner!
     getPets(userID: ID!): [Pet]!
 }
+

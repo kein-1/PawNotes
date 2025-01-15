@@ -38,6 +38,12 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
+// SetPassword sets the "password" field.
+func (uc *UserCreate) SetPassword(s string) *UserCreate {
+	uc.mutation.SetPassword(s)
+	return uc
+}
+
 // AddPetIDs adds the "pets" edge to the Pet entity by IDs.
 func (uc *UserCreate) AddPetIDs(ids ...int) *UserCreate {
 	uc.mutation.AddPetIDs(ids...)
@@ -96,6 +102,9 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
+	if _, ok := uc.mutation.Password(); !ok {
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
+	}
 	return nil
 }
 
@@ -133,6 +142,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
+	}
+	if value, ok := uc.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeString, value)
+		_node.Password = value
 	}
 	if nodes := uc.mutation.PetsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

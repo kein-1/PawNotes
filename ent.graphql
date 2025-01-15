@@ -21,6 +21,7 @@ input CreateUserInput {
   first: String!
   last: String!
   email: String!
+  password: String!
   petIDs: [ID!]
 }
 """
@@ -131,6 +132,7 @@ input UpdateUserInput {
   first: String
   last: String
   email: String
+  password: String
   addPetIDs: [ID!]
   removePetIDs: [ID!]
   clearPets: Boolean
@@ -140,5 +142,6 @@ type User implements Node {
   first: String!
   last: String!
   email: String!
+  password: String!
   pets: [Pet!]
 }

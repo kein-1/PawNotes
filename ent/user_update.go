@@ -70,6 +70,20 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
+// SetPassword sets the "password" field.
+func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
+	uu.mutation.SetPassword(s)
+	return uu
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePassword(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetPassword(*s)
+	}
+	return uu
+}
+
 // AddPetIDs adds the "pets" edge to the Pet entity by IDs.
 func (uu *UserUpdate) AddPetIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddPetIDs(ids...)
@@ -155,6 +169,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := uu.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeString, value)
 	}
 	if uu.mutation.PetsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -259,6 +276,20 @@ func (uuo *UserUpdateOne) SetEmail(s string) *UserUpdateOne {
 func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetEmail(*s)
+	}
+	return uuo
+}
+
+// SetPassword sets the "password" field.
+func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
+	uuo.mutation.SetPassword(s)
+	return uuo
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePassword(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetPassword(*s)
 	}
 	return uuo
 }
@@ -378,6 +409,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := uuo.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeString, value)
 	}
 	if uuo.mutation.PetsCleared() {
 		edge := &sqlgraph.EdgeSpec{

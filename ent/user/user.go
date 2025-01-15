@@ -18,6 +18,8 @@ const (
 	FieldLast = "last"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldPassword holds the string denoting the password field in the database.
+	FieldPassword = "password"
 	// EdgePets holds the string denoting the pets edge name in mutations.
 	EdgePets = "pets"
 	// Table holds the table name of the user in the database.
@@ -37,6 +39,7 @@ var Columns = []string{
 	FieldFirst,
 	FieldLast,
 	FieldEmail,
+	FieldPassword,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -70,6 +73,11 @@ func ByLast(opts ...sql.OrderTermOption) OrderOption {
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+}
+
+// ByPassword orders the results by the password field.
+func ByPassword(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPassword, opts...).ToFunc()
 }
 
 // ByPetsCount orders the results by pets count.

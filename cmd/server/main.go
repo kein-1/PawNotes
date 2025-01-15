@@ -10,7 +10,7 @@ import (
 	"github.com/kein-1/pawnotes"
 	"github.com/kein-1/pawnotes/ent"
 	"github.com/kein-1/pawnotes/ent/migrate"
-	auth "github.com/kein-1/pawnotes/internal/jwt"
+	"github.com/kein-1/pawnotes/internal/login"
 
 	// "github.com/kein-1/pawnotes/ent"
 	// "github.com/kein-1/pawnotes/ent/migrate"
@@ -41,7 +41,7 @@ func Open() *ent.Client {
 	return ent.NewClient(ent.Driver(drv))
 }
 
-func SetupServer() (*chi.Mux, error) {
+func SetupServer(srv *handler.Server, client *ent.Client) (*chi.Mux, error) {
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -50,12 +50,16 @@ func SetupServer() (*chi.Mux, error) {
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"}, // change in production
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+
+	r.Handle("/graphql", srv)
+
+	handler := login.NewAuthHandler(client)
+	handler.RegisterRoute(r)
 
 	return r, nil
 
@@ -74,20 +78,18 @@ func main() {
 
 	fmt.Println("Db successfully connected")
 
-	r, err := SetupServer()
+	// id, err := auth.ParseToken(tokenStr)
+	// if err != nil {
+	// 	log.Fatal("Error with jwt. ", err)
+	// }
+
+	// Configure the server and start listening on :8080.
+	srv := handler.NewDefaultServer(pawnotes.NewSchema(client))
+	r, err := SetupServer(srv, client)
 	if err != nil {
 		log.Fatal("Error setting up server")
 	}
 
-	tokenStr, err := auth.GenerateToken(8589934592)
-	if err != nil {
-		log.Fatal("Error creating token", err.Error())
-	}
-	fmt.Println("Token str:", tokenStr)
-
-	// Configure the server and start listening on :8080.
-	srv := handler.NewDefaultServer(pawnotes.NewSchema(client))
-	r.Handle("/graphql", srv)
 	log.Println("listening on :8080")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal("http. server terminated", err)
