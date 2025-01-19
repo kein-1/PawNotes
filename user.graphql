@@ -1,5 +1,7 @@
 extend type Mutation {
     createUser(input: CreateUserInput!): User!
     deleteUser(id: ID!): User!
+
+    testMutation: String
 }
 

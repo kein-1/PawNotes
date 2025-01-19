@@ -50,11 +50,12 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreatePet  func(childComplexity int, input ent.CreatePetInput) int
-		CreateUser func(childComplexity int, input ent.CreateUserInput) int
-		DeletePet  func(childComplexity int, id int) int
-		DeleteUser func(childComplexity int, id int) int
-		UpdatePet  func(childComplexity int, id int, input ent.UpdatePetInput) int
+		CreatePet    func(childComplexity int, input ent.CreatePetInput) int
+		CreateUser   func(childComplexity int, input ent.CreateUserInput) int
+		DeletePet    func(childComplexity int, id int) int
+		DeleteUser   func(childComplexity int, id int) int
+		TestMutation func(childComplexity int) int
+		UpdatePet    func(childComplexity int, id int, input ent.UpdatePetInput) int
 	}
 
 	Owner struct {
@@ -105,6 +106,7 @@ type MutationResolver interface {
 	UpdatePet(ctx context.Context, id int, input ent.UpdatePetInput) (*ent.Pet, error)
 	CreateUser(ctx context.Context, input ent.CreateUserInput) (*ent.User, error)
 	DeleteUser(ctx context.Context, id int) (*ent.User, error)
+	TestMutation(ctx context.Context) (*string, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -182,6 +184,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteUser(childComplexity, args["id"].(int)), true
+
+	case "Mutation.testMutation":
+		if e.complexity.Mutation.TestMutation == nil {
+			break
+		}
+
+		return e.complexity.Mutation.TestMutation(childComplexity), true
 
 	case "Mutation.updatePet":
 		if e.complexity.Mutation.UpdatePet == nil {
@@ -1280,6 +1289,47 @@ func (ec *executionContext) fieldContext_Mutation_deleteUser(ctx context.Context
 	if fc.Args, err = ec.field_Mutation_deleteUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_testMutation(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_testMutation(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TestMutation(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_testMutation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -4824,6 +4874,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "testMutation":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_testMutation(ctx, field)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

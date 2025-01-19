@@ -6,12 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kein-1/pawnotes/ent"
 	"github.com/kein-1/pawnotes/ent/user"
 	auth "github.com/kein-1/pawnotes/internal/jwt"
+	"github.com/kein-1/pawnotes/utils"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/rs/zerolog/log"
 )
 
 type LoginPayload struct {
@@ -26,11 +30,11 @@ type AuthHandler struct {
 func NewAuthHandler(db *ent.Client) *AuthHandler {
 	return &AuthHandler{db: db}
 }
-
 func (h *AuthHandler) RegisterRoute(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", h.handleLogin)
 	})
+
 }
 
 func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -44,47 +48,47 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Error in parsing payload %w", err).Error()})
+		log.Info().Err(err).Msg("Error in parsing payload")
+		utils.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Incorrect username or password").Error()})
 		return
 	}
 
 	user, err := h.db.User.Query().Where(user.Email(payload.Email)).First(r.Context())
 	if err != nil {
-		WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("User does not exist. %w", err).Error()})
+		log.Info().Err(err).Msg("User does not exist")
+		utils.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Incorrect username or password").Error()})
 		return
 	}
 
 	// check password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(payload.Password)); err != nil {
-		WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Incorrect password. %w", err).Error()})
+		log.Info().Err(err).Msg("Incorrect password; failed to hash properly")
+		utils.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Incorrect username or password").Error()})
 		return
 	}
 
 	// generate token, set cookie
-
 	accessToken, err := auth.GenerateToken(user.ID)
 	if err != nil {
-		WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Error generating token. %w", err).Error()})
+		log.Info().Err(err).Msg("Error generating token")
+		utils.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": fmt.Errorf("Incorrect username or password").Error()})
 		return
 	}
 
 	accessCookie := http.Cookie{
 		Name:     "access",
 		Value:    accessToken,
-		MaxAge:   60 * 15,
+		MaxAge:   int((time.Hour * 24 * 7).Seconds()), // TODO: change in prod
 		HttpOnly: true,
-		Secure:   false, // change in prod
+		Secure:   false, // TODO: change in prod
 		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 	}
 	http.SetCookie(w, &accessCookie)
-	WriteJSON(w, 200, "successfully logged in")
 
-}
+	// also set cookie in auth header
+	w.Header().Set("Access-Token", accessToken)
 
-func WriteJSON(w http.ResponseWriter, status int, content any) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	err := json.NewEncoder(w).Encode(content)
-	return err
+	utils.WriteJSON(w, 200, "successfully logged in")
+
 }

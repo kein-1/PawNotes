@@ -11,6 +11,7 @@ import (
 	"github.com/kein-1/pawnotes/ent"
 	"github.com/kein-1/pawnotes/ent/migrate"
 	"github.com/kein-1/pawnotes/internal/login"
+	custommiddleware "github.com/kein-1/pawnotes/middleware"
 
 	// "github.com/kein-1/pawnotes/ent"
 	// "github.com/kein-1/pawnotes/ent/migrate"
@@ -56,7 +57,10 @@ func SetupServer(srv *handler.Server, client *ent.Client) (*chi.Mux, error) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	r.Handle("/graphql", srv)
+	r.Group(func(r chi.Router) {
+		r.Use(custommiddleware.AuthMiddleware)
+		r.Handle("/graphql", srv)
+	})
 
 	handler := login.NewAuthHandler(client)
 	handler.RegisterRoute(r)

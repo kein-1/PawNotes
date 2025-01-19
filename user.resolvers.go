@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/kein-1/pawnotes/ent"
+	custommiddleware "github.com/kein-1/pawnotes/middleware"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,4 +33,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input ent.CreateUserI
 // DeleteUser is the resolver for the deleteUser field.
 func (r *mutationResolver) DeleteUser(ctx context.Context, id int) (*ent.User, error) {
 	panic(fmt.Errorf("not implemented: DeleteUser - deleteUser"))
+}
+
+// TestMutation is the resolver for the testMutation field.
+func (r *mutationResolver) TestMutation(ctx context.Context) (*string, error) {
+	userID := ctx.Value(custommiddleware.UserKey)
+	fmt.Println("The user id is:", userID)
+	s := "good user"
+	return &s, nil
 }
